@@ -2,37 +2,27 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>青空文庫検索</title>
+    <title>青空図書館 検索</title>
 </head>
 <body>
-    <h1>青空文庫検索</h1>
-    
-    <form method="post">
+    <h1>青空図書館 検索</h1>
+    <form action="/search" method="post">
         <div>
             <label for="title_query">作品名:</label>
             <input type="text" id="title_query" name="title_query">
         </div>
-        
         <div>
-            <label for="author_query">著者名:</label>
-            <input type="text" id="author_query" name="author_query">
+            <label for="author_family_name_query">著者姓:</label>
+            <input type="text" id="author_family_name_query" name="author_family_name_query">
+            <label for="author_first_name_query">著者名:</label>
+            <input type="text" id="author_first_name_query" name="author_first_name_query">
         </div>
-
         <div>
-            <label for="birth_query">著者生年:</label>
-            <input type="text" id="birth_query" name="birth_query">
+            <label for="birth_query">生年:</label>
+            <input type="number" id="birth_query" name="birth_query">
+            <label for="death_query">没年:</label>
+            <input type="number" id="death_query" name="death_query">
         </div>
-
-        <div>
-            <label for="death_query">著者没年:</label>
-            <input type="text" id="death_query" name="death_query">
-        </div>
-
-        <div>
-            <label for="ranking_query">ランキング:</label>
-            <input type="text" id="ranking_query" name="ranking_query">
-        </div>
-
         <input type="submit" value="検索">
     </form>
 </body>

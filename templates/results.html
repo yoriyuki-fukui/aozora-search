@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>検索結果</title>
+</head>
+<body>
+    <h1>検索結果</h1>
+    
+    {% if results %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ランキング</th>
+                    <th>作品名</th>
+                    <th>著者姓</th>
+                    <th>著者名</th>
+                    <th>生年</th>
+                    <th>没年</th>
+                    <th>アクセス数合計</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for book in results %}
+                <tr>
+                    <td>{{ book.ランキング }}</td>
+                    <td>
+                        {% if book.html_url %}
+                            <a href="{{ book.html_url }}" target="_blank">{{ book.作品名 }}</a>
+                        {% else %}
+                            {{ book.作品名 }}
+                        {% endif %}
+                    </td>
+                    <td>{{ book.著者姓 }}</td>
+                    <td>{{ book.著者名 }}</td>
+                    <td>{{ book.著者生年 }}</td>
+                    <td>{{ book.著者没年 }}</td>
+                    <td>{{ book.アクセス数合計 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>その条件の本は、見つからなかったみたいだね。</p>
+    {% endif %}
+    
+    <a href="/">別の本を探す</a>
+</body>
+</html>

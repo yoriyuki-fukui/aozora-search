@@ -1,100 +1,126 @@
 import csv
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, func, select, union_all
 
-# --- わたしたちが使う、3つの宝の地図（CSVファイル） ---
+# 元データ
 CSV_TXT_RANKING = 'aozora/ranking_txt.csv'
 CSV_XHTML_RANKING = 'aozora/ranking_xhtml.csv'
 CSV_BOOK_LIST = 'aozora/list_person_all_extended_utf8.csv'
 
+# データベースが格納されるファイル
 DATABASE_FILE = 'library.db'
 
-# --- SQLAlchemyの魔法の世界への入り口 ---
+# SQLAlchemyの起動
 engine = create_engine(f'sqlite:///{DATABASE_FILE}')
 metadata = MetaData()
 
-# --- わたしたちが使う、仮の宝物庫（一時テーブル）の、設計図を、描く ---
+# テキスト形式へのアクセス数の表
 txt_ranking_temp = Table('txt_ranking_temp', metadata,
     Column('作品名', String),
-    Column('著者名', String),
     Column('アクセス数', Integer)
 )
 
+# XHTML形式へのアクセス数の表
 xhtml_ranking_temp = Table('xhtml_ranking_temp', metadata,
     Column('作品名', String),
-    Column('著者名', String),
     Column('アクセス数', Integer)
 )
 
+# 本に関する一時的なデータの格納場所
 book_list_temp = Table('book_list_temp', metadata,
     Column('作品ID', String),
     Column('作品名', String),
+    Column('著者姓', String),
     Column('著者名', String),
+    Column('著者生年', Integer),
+    Column('著者没年', Integer),
     Column('html_url', String)
 )
 
-# --- 最終的な、完璧な宝の地図（booksテーブル）の、設計図 ---
+# 本に関する最終的なデータの表
 books_table = Table('books', metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('作品ID', Integer),
     Column('作品名', String),
+    Column('著者姓', String),
     Column('著者名', String),
+    Column('著者生年', Integer),
+    Column('著者没年', Integer),
     Column('アクセス数合計', Integer),
     Column('html_url', String)
 )
 
-# --- 儀式の、始まり ---
+# --- 始まり ---
 with engine.connect() as conn:
-    # まず、島を、一度、更地にする
+    # データベースを更地にする
     metadata.drop_all(conn)
-    # 新しい、設計図に基づいて、すべての、宝物庫を作る
+    # すべての表を作る
     metadata.create_all(conn)
 
-    # --- CSVから、仮の宝物庫へ、宝を移す ---
+    # CSVから仮の表へデータを移す（txt形式へのアクセス数）
     with open(CSV_TXT_RANKING, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         next(reader)
         for row in reader:
-            conn.execute(txt_ranking_temp.insert().values(作品名=row[1], 著者名=row[3], アクセス数=row[4]))
+            conn.execute(txt_ranking_temp.insert().values(作品名=row[1], アクセス数=row[4]))
 
+    # CSVから仮の表へデータを移す（XHTML形式へのアクセス数）
     with open(CSV_XHTML_RANKING, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         next(reader)
         for row in reader:
-            conn.execute(xhtml_ranking_temp.insert().values(作品名=row[1], 著者名=row[3], アクセス数=row[4]))
-            
+            conn.execute(xhtml_ranking_temp.insert().values(作品名=row[1], アクセス数=row[4]))
+
+    # 本のリストのデータを読み込み仮の表に書き込む
     with open(CSV_BOOK_LIST, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         next(reader)
         for row in reader:
-            conn.execute(book_list_temp.insert().values(作品ID=row[0], 作品名=row[1], 著者名=row[14], html_url=row[49]))
+            try:
+                birth_year=int(row[24].split('-')[0]) if row[24] else None
+            except Exception:
+                birth_year=None
+            try:
+                death_year=int(row[25].split('-')[0]) if row[24] else None
+            except Exception:
+                death_year=None
 
-    # --- ここからが、SQLAlchemyの、一番、美しい、魔法だ ---
+            conn.execute(book_list_temp.insert().values(作品ID=row[0], 
+                                                        作品名=row[1], 
+                                                        著者姓=row[15], 
+                                                        著者名=row[16], 
+                                                        著者生年=birth_year,
+                                                        著者没年=death_year,
+                                                        html_url=row[13]))
 
-    # 1. TXTとXHTMLのランキングを、UNIONで、ひとつに、まとめる
+    # TXTとXHTMLのランキングをUNIONでひとつにまとめる
     u = union_all(
-        select(txt_ranking_temp.c.作品名, txt_ranking_temp.c.著者名, txt_ranking_temp.c.アクセス数),
-        select(xhtml_ranking_temp.c.作品名, xhtml_ranking_temp.c.著者名, xhtml_ranking_temp.c.アクセス数)
+        select(txt_ranking_temp.c.作品名, txt_ranking_temp.c.アクセス数),
+        select(xhtml_ranking_temp.c.作品名, xhtml_ranking_temp.c.アクセス数)
     ).alias('union_table')
 
-    # 2. 作品名と著者名で、グループ化して、アクセス数を合計する
+    # 作品名でグループ化してアクセス数を合計する
     total_access = select(
         u.c.作品名,
-        u.c.著者名,
         func.sum(u.c.アクセス数).label('total_access')
-    ).group_by(u.c.作品名, u.c.著者名).alias('total_access_table')
+    ).group_by(u.c.作品名).alias('total_access_table')
 
-    # 3. 合計したランキングと、本のリストを、LEFT JOINで、結びつける
+    # 本のリストと合計したランキングをLEFT JOINで結びつける
     final_query = select(
-        total_access.c.作品名,
-        total_access.c.著者名,
+        book_list_temp.c.作品ID,
+        book_list_temp.c.作品名,
+        book_list_temp.c.著者姓,
+        book_list_temp.c.著者名,
+        book_list_temp.c.著者生年,
+        book_list_temp.c.著者没年,
         total_access.c.total_access,
         book_list_temp.c.html_url
     ).select_from(
-        total_access.outerjoin(book_list_temp, total_access.c.作品名 == book_list_temp.c.作品名)
+        book_list_temp.outerjoin(total_access, book_list_temp.c.作品名 == total_access.c.作品名)
     )
 
-    # --- 組み立てた、魔法の、呪文を、唱えて、最終的な宝の地図を作る ---
+    # 本の表に結果を書き込む
     conn.execute(books_table.insert().from_select(
-        ['作品名', '著者名', 'アクセス数合計', 'html_url'],
+        ['作品ID', '作品名', '著者姓', '著者名', '著者生年', '著者没年', 'アクセス数合計', 'html_url'],
         final_query
     ))
 
@@ -102,4 +128,4 @@ with engine.connect() as conn:
     conn.commit()
 
 
-print(f"SQLAlchemyの、純粋な、魔法だけで、'books' という、完璧な地図を、'{DATABASE_FILE}' の島に、作成したよ！")
+print(f"本のデータベースを'{DATABASE_FILE}' に作成したよ！")
