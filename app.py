@@ -12,7 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'li
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- 新しい図書館の設計図を船に教える ---
+# --- Bookテーブルの定義 ---
 
 class Book(db.Model):
     __tablename__ = 'books'
@@ -28,24 +28,24 @@ class Book(db.Model):
 with app.app_context():
     db.create_all()
 
-# 検索画面を見せるための歌
+# ホーム画面
 @app.route('/')
 def index():
     # 検索画面へ案内する
     return render_template('search.html')
 
-# 検索結果を見せるための、新しい賢い歌
+# 検索結果の表示
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
-        # フォームから、お客さんの叫び声を受け取る
+        # フォームからクエリを受け取る
         title = request.form.get('title_query')
         author_family_name = request.form.get('author_family_name_query')
         author_first_name = request.form.get('author_first_name_query')
         birth = request.form.get('birth_query')
         death = request.form.get('death_query')
 
-        # 賢い倉庫番（SQLAlchemy）に、宝探しを命令する
+        # SQLAlchemyに検索をお願いする
         query = db.session.query(Book)
 
         if title:
