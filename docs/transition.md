@@ -1,4 +1,21 @@
+
 ```Mermaid
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#ffffff',
+    'primaryTextColor': '#000000',
+    'primaryBorderColor': '#000000',
+    'lineColor': '#000000',
+    'secondaryColor': '#ffffff',
+    'tertiaryColor': '#ffffff',
+    'mainBkg': '#ffffff',
+    'nodeBorder': '#000000',
+    'clusterBkg': '#ffffff',
+    'clusterBorder': '#000000',
+    'edgeLabelBackground':'#ffffff'
+  }
+}}%%
 graph TD
     A[トップページ] -->|キーワード入力・検索実行| B(検索結果一覧);
     B -->|書籍を選択| C{書籍詳細};
@@ -19,7 +36,25 @@ graph TD
 ```
 
 ```Mermaid
-
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'actorBkg': '#ffffff',
+    'actorBorder': '#000000',
+    'actorTextColor': '#000000',
+    'signalColor': '#000000',
+    'signalTextColor': '#000000',
+    'labelBoxBkgColor': '#ffffff',
+    'labelBoxBorderColor': '#000000',
+    'noteBkgColor': '#ffffff',
+    'noteBorderColor': '#000000',
+    'loopTextColor': '#000000',
+    'activationBorderColor': '#000000',
+    'activationBkgColor': '#ffffff',
+    'sequenceNumberColor': '#000000',
+    'mainBkg': '#ffffff'
+  }
+}}%%
 sequenceDiagram
     participant 利用者
     participant ブラウザ as ブラウザ
