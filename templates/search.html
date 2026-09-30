@@ -6,7 +6,7 @@
 </head>
 <body>
     <h1>青空図書館 検索</h1>
-    <form action="/search" method="post">
+    <form action="{{ url_for('search') }}" method="post">
         <div>
             <label for="title_query">作品名:</label>
             <input type="text" id="title_query" name="title_query">
