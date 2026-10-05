@@ -2,9 +2,9 @@ import csv
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, func, select, union_all
 
 # 元データ
-CSV_TXT_RANKING = 'aozora/ranking_txt.csv'
-CSV_XHTML_RANKING = 'aozora/ranking_xhtml.csv'
-CSV_BOOK_LIST = 'aozora/list_person_all_extended_utf8.csv'
+CSV_TXT_RANKING = 'data/ranking_txt.csv'
+CSV_XHTML_RANKING = 'data/ranking_xhtml.csv'
+CSV_BOOK_LIST = 'data/list_person_all_extended_utf8.csv'
 
 # データベースが格納されるファイル
 DATABASE_FILE = 'library.db'
